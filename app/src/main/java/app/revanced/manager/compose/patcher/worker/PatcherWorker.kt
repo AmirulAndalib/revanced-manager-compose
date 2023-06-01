@@ -10,6 +10,7 @@ import app.revanced.manager.compose.patcher.aapt.Aapt
 import app.revanced.manager.compose.util.PatchesSelection
 import app.revanced.manager.compose.util.tag
 import app.revanced.patcher.extensions.PatchExtensions.patchName
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
@@ -50,7 +51,7 @@ class PatcherWorker(context: Context, parameters: WorkerParameters) : CoroutineW
 
         val args = Json.decodeFromString<Args>(inputData.getString(ARGS_KEY)!!)
 
-        val bundles = bundleRepository.bundles.value
+        val bundles = bundleRepository.bundles.first()
         val integrations = bundles.mapNotNull { (_, bundle) -> bundle.integrations }
 
         val patchList = args.selectedPatches.flatMap { (bundleName, selected) ->

@@ -49,7 +49,7 @@ class SourceRepository(app: Application, private val persistenceRepo: SourcePers
         persistenceRepo.clear()
         _sources.emit(emptyMap())
         sourcesDir.apply {
-            delete()
+            deleteRecursively()
             mkdirs()
         }
 
@@ -58,7 +58,7 @@ class SourceRepository(app: Application, private val persistenceRepo: SourcePers
 
     suspend fun remove(source: Source) = withContext(Dispatchers.Default) {
         persistenceRepo.delete(source.id)
-        directoryOf(source.id).delete()
+        directoryOf(source.id).deleteRecursively()
 
         _sources.update {
             it.filterValues { value ->

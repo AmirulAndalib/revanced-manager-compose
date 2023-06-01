@@ -14,6 +14,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import io.ktor.http.Url
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 typealias PatchesSelection = Map<String, List<String>>
@@ -69,4 +72,15 @@ inline fun LifecycleOwner.launchAndRepeatWithViewLifecycle(
             block()
         }
     }
+}
+
+/**
+ * Combine a [Map] of [Flow]s into a [Flow] that emits a [Map].
+ */
+fun <K, V> Map<K, Flow<V>>.combineFlowMap(): Flow<Map<K, V>> = combine(map { (key, valueFlow) ->
+    // Add the key to the value flow.
+    valueFlow.map { key to it }
+}) {
+    // Take the combined key-value array and turn it into a map.
+    it.toMap()
 }
