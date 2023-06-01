@@ -6,8 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
 import app.revanced.manager.compose.domain.manager.PreferencesManager
-import app.revanced.manager.compose.domain.repository.BundleRepository
+import app.revanced.manager.compose.domain.repository.SourceRepository
 import app.revanced.manager.compose.ui.destination.Destination
 import app.revanced.manager.compose.ui.screen.*
 import app.revanced.manager.compose.ui.theme.ReVancedManagerTheme
@@ -15,7 +16,6 @@ import app.revanced.manager.compose.ui.theme.Theme
 import app.revanced.manager.compose.util.PM
 import dev.olshevski.navigation.reimagined.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.getViewModel
@@ -23,8 +23,7 @@ import org.koin.core.parameter.parametersOf
 
 class MainActivity : ComponentActivity() {
     private val prefs: PreferencesManager by inject()
-    private val bundleRepository: BundleRepository by inject()
-    private val mainScope = MainScope()
+    private val sourceRepository: SourceRepository by inject()
 
     @ExperimentalAnimationApi
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,10 +31,11 @@ class MainActivity : ComponentActivity() {
 
         installSplashScreen()
 
-        bundleRepository.onAppStart(this@MainActivity)
-
+        lifecycleScope.launch {
+            sourceRepository.loadSources()
+        }
         val context = this
-        mainScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch(Dispatchers.IO) {
             PM.loadApps(context)
         }
 

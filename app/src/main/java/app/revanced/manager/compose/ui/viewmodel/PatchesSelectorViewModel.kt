@@ -2,7 +2,7 @@ package app.revanced.manager.compose.ui.viewmodel
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
-import app.revanced.manager.compose.domain.repository.BundleRepository
+import app.revanced.manager.compose.domain.repository.SourceRepository
 import app.revanced.manager.compose.patcher.patch.PatchInfo
 import app.revanced.manager.compose.util.PackageInfo
 import app.revanced.manager.compose.util.PatchesSelection
@@ -11,7 +11,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
 class PatchesSelectorViewModel(packageInfo: PackageInfo) : ViewModel(), KoinComponent {
-    val bundlesFlow = get<BundleRepository>().bundles.map { bundles ->
+    val bundlesFlow = get<SourceRepository>().bundles.map { bundles ->
         bundles.mapValues { (_, bundle) -> bundle.patches }.map { (name, patches) ->
             val supported = mutableListOf<PatchInfo>()
             val unsupported = mutableListOf<PatchInfo>()

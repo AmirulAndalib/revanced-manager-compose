@@ -2,23 +2,38 @@ package app.revanced.manager.compose.domain.repository
 
 import android.app.Application
 import android.util.Log
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import app.revanced.manager.compose.data.room.sources.SourceEntity
 import app.revanced.manager.compose.data.room.sources.SourceLocation
 import app.revanced.manager.compose.domain.sources.RemoteSource
 import app.revanced.manager.compose.domain.sources.LocalSource
 import app.revanced.manager.compose.domain.sources.Source
+import app.revanced.manager.compose.patcher.patch.PatchBundle
+import app.revanced.manager.compose.util.combineFlowMap
 import app.revanced.manager.compose.util.tag
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
 
 class SourceRepository(app: Application, private val persistenceRepo: SourcePersistenceRepository) {
     private val sourcesDir = app.dataDir.resolve("sources").also { it.mkdirs() }
+
+    private val _sources: MutableStateFlow<Map<String, Source>> = MutableStateFlow(emptyMap())
+    val sources = _sources.asStateFlow()
+
+    /**
+     * A [Flow] that gives you all loaded [PatchBundle]s.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val bundles = sources.flatMapLatest { sources ->
+        sources.mapValues { (_, source) -> source.bundle }.combineFlowMap()
+    }
 
     /**
      * Get the directory of the [Source] with the specified [uid], creating it if needed.
@@ -83,9 +98,6 @@ class SourceRepository(app: Application, private val persistenceRepo: SourcePers
         val id = persistenceRepo.create(name, SourceLocation.Remote(apiUrl))
         addSource(name, RemoteSource(id, directoryOf(id)))
     }
-
-    private val _sources: MutableStateFlow<Map<String, Source>> = MutableStateFlow(emptyMap())
-    val sources = _sources.asStateFlow()
 
     suspend fun redownloadRemoteSources() =
         sources.value.values.filterIsInstance<RemoteSource>().forEach { it.downloadLatest() }

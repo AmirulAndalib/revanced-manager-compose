@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import app.revanced.manager.compose.domain.repository.BundleRepository
+import app.revanced.manager.compose.domain.repository.SourceRepository
 import app.revanced.manager.compose.patcher.Session
 import app.revanced.manager.compose.patcher.aapt.Aapt
 import app.revanced.manager.compose.util.PatchesSelection
@@ -21,7 +21,7 @@ import java.io.FileNotFoundException
 // TODO: setup wakelock + notification so android doesn't murder us.
 class PatcherWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters),
     KoinComponent {
-    private val bundleRepository: BundleRepository by inject()
+    private val sourceRepository: SourceRepository by inject()
 
     @Serializable
     data class Args(
@@ -51,7 +51,7 @@ class PatcherWorker(context: Context, parameters: WorkerParameters) : CoroutineW
 
         val args = Json.decodeFromString<Args>(inputData.getString(ARGS_KEY)!!)
 
-        val bundles = bundleRepository.bundles.first()
+        val bundles = sourceRepository.bundles.first()
         val integrations = bundles.mapNotNull { (_, bundle) -> bundle.integrations }
 
         val patchList = args.selectedPatches.flatMap { (bundleName, selected) ->
